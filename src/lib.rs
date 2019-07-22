@@ -291,7 +291,7 @@ impl<Item, Error: 'static + Send> AsyncTryStream<Item, Error> {
 }
 
 /// Stream implementation for Futures 0.3.
-impl<I, E: Unpin> Stream for AsyncTryStream<I, E> {
+impl<I, E> Stream for AsyncTryStream<I, E> {
     type Item = Result<I, E>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Result<I, E>>> {
