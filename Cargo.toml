@@ -16,7 +16,7 @@ homepage = "https://github.com/miquels/async-stream-rs"
 authors = ["Miquel van Smoorenburg <mike@langeraar.net>"]
 edition = "2018"
 license = "Apache-2.0"
-keywords = ["async async/await stream yield"]
+keywords = ["async" "async/await" "stream" "yield"]
 categories = ["asynchronous", "rust-patterns"]
 
 [lib]
