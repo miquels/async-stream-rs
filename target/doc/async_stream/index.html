@@ -1,0 +1,45 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `async_stream` crate."><meta name="keywords" content="rust, rustlang, rust-lang, async_stream"><title>async_stream - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../async_stream/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Crate async_stream</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all async_stream's items</p></a><div class="block items"><ul><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'async_stream', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/async_stream/lib.rs.html#1-360' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>async_stream</a></span></h1><div class='docblock'><h2 id="use-an-async-closure-to-produce-items-for-a-stream" class="section-header"><a href="#use-an-async-closure-to-produce-items-for-a-stream">Use an async closure to produce items for a stream.</a></h2>
+<p>A way to produce items for a stream from an <a href="https://github.com/rust-lang/rfcs/blob/master/text/2394-async_await.md#async-blocks-vs-async-closures">async closure</a>, while we
+are waiting for official <a href="https://github.com/rust-lang/rfcs/blob/master/text/2394-async_await.md#generators-and-streams">async yield</a> support.</p>
+<p>The obvious solution would be to just use a channel, spawn the
+async closure as a seperate task, letting it send items onto the
+sink end of the channel - the other end is the stream, producing
+those items.</p>
+<p>However this results in overhead - memory allocations, context switching
+between the tasks, unnecessary buffering, and it makes canceling
+the stream (dropping it) harder than it needs to be.</p>
+<p>The AsyncStream from this crate runs as a stream in the current task,
+using only async/await and no other unstable features.</p>
+<p>Example:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="attribute">#![<span class="ident">feature</span>(<span class="ident">async_await</span>)]</span>
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">StreamExt</span>;
+<span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">executor</span>::<span class="ident">block_on</span>;
+<span class="kw">use</span> <span class="ident">async_stream</span>::<span class="ident">async_stream</span>;
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">strm</span> <span class="op">=</span> <span class="macro">async_stream</span><span class="macro">!</span>(<span class="ident">u8</span>, {
+    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0u8</span>..<span class="number">10</span> {
+        <span class="macro">stream_send</span><span class="macro">!</span>(<span class="ident">i</span>);
+    }
+});
+
+<span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="kw">async</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>) <span class="op">=</span> <span class="ident">strm</span>.<span class="ident">next</span>().<span class="kw">await</span> {
+        <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">item</span>);
+        <span class="ident">count</span> <span class="op">+=</span> <span class="number">1</span>;
+    }
+    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">count</span> <span class="op">==</span> <span class="number">10</span>);
+};
+<span class="ident">block_on</span>(<span class="ident">fut</span>);
+</pre></div>
+</div><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table><tr class='module-item'><td><a class="macro" href="macro.async_stream.html" title='async_stream::async_stream macro'>async_stream</a></td><td class='docblock-short'><p>Convenience macro to create an <code>AsyncStream</code>.</p>
+</td></tr><tr class='module-item'><td><a class="macro" href="macro.async_try_stream.html" title='async_stream::async_try_stream macro'>async_try_stream</a></td><td class='docblock-short'><p>Convenience macro to create an <code>AsyncTryStream</code>.</p>
+</td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table><tr class='module-item'><td><a class="struct" href="struct.AsyncStream.html" title='async_stream::AsyncStream struct'>AsyncStream</a></td><td class='docblock-short'><p>Produce items for a stream from an async closure.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.AsyncTryStream.html" title='async_stream::AsyncTryStream struct'>AsyncTryStream</a></td><td class='docblock-short'><p>Like <code>AsyncStream</code>, but produces <code>Result</code> values.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Sender.html" title='async_stream::Sender struct'>Sender</a></td><td class='docblock-short'><p>Type of the sender passed as first argument into the async closure.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.SenderFuture.html" title='async_stream::SenderFuture struct'>SenderFuture</a></td><td class='docblock-short'><p>Future returned by the Sender.send() method.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../";window.currentCrate = "async_stream";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

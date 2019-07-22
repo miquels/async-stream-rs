@@ -1,5 +1,9 @@
 Cargo.lock
-/target/
+/target/.*
+/target/debug/
+/target/release/
+/target/package/
+target/doc/.lock
 **/*.rs.bk
 .vscode
 src/xml
