@@ -24,7 +24,7 @@ name = "async_stream"
 path = "src/lib.rs"
 
 [features]
-default = []
+default = [ "compat" ]
 
 # The 'compat' feature adds support for futures 0.1 streams.
 compat = [ "futures01", "futures/compat" ]
